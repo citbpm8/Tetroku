@@ -1,5 +1,4 @@
-# Стадия сборки
-FROM python:3.10-slim AS builder
+# Стадия сборкиFROM python:3.10-slim AS builder
 
 ENV PIP_NO_CACHE_DIR=1
 
@@ -47,7 +46,7 @@ RUN chmod +x /entrypoint.sh
 WORKDIR /Hikka
 
 # Открываем оба порта
-EXPOSE 10000 10001
+EXPOSE 8080
 
 # Запускаем скрипт
 ENTRYPOINT ["/entrypoint.sh"]

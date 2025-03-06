@@ -248,7 +248,7 @@ def gen_port(cfg: str = "port", no8080: bool = False) -> int:
     :returns: Integer value of generated port
     """
     if "DOCKER" in os.environ and not no8080:
-        return 10001
+        return 8080
 
     # But for own server we generate new free port, and assign to it
     if port := get_config_key(cfg):

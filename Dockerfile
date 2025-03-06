@@ -1,4 +1,4 @@
-# Стадия сборкиFROM python:3.10-slim AS builder
+FROM python:3.10-slim AS builder
 
 ENV PIP_NO_CACHE_DIR=1
 

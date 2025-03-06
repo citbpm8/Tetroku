@@ -1,27 +1,22 @@
 #!/bin/bash
 set -e
 
-# Список запрещённых утилит
 FORBIDDEN_UTILS="socat nc netcat php lua telnet ncat cryptcat rlwrap msfconsole hydra medusa john hashcat sqlmap metasploit empire cobaltstrike ettercap bettercap responder mitmproxy evil-winrm chisel ligolo revshells powershell certutil bitsadmin smbclient impacket-scripts smbmap crackmapexec enum4linux ldapsearch onesixtyone snmpwalk zphisher socialfish blackeye weeman aircrack-ng reaver pixiewps wifite kismet horst wash bully wpscan commix xerosploit slowloris hping iodine iodine-client iodine-server"
 
-# Пути
-DATA_DIR="/data"                         # Директория на ячейке, где hikka хранит данные
-CELL_NAME="${CELL_NAME:-default_cell}"   # Уникальное название ячейки
-DB_CELL_KEY="data_$CELL_NAME"            # Ключ в базе (например, data_bot1)
+DATA_DIR="/data"
+CELL_NAME="${CELL_NAME:-default_cell}"
+DB_CELL_KEY="data_$CELL_NAME"
 
-# Проверка и установка зависимостей для работы с PostgreSQL
 if ! python -c "import psycopg2" >/dev/null 2>&1; then
     echo "Установка psycopg2-binary..."
     pip install psycopg2-binary
 fi
 
-# Проверка наличия DATABASE_URL
 if [ -z "$DATABASE_URL" ]; then
     echo "Ошибка: Переменная окружения DATABASE_URL не задана. Убедитесь, что база данных настроена на Render."
     exit 1
 fi
 
-# Инициализация базы данных
 init_db() {
     echo "Запуск init_db"
     python - <<EOF
@@ -31,10 +26,11 @@ from psycopg2 import Error
 try:
     conn = psycopg2.connect("$DATABASE_URL")
     cursor = conn.cursor()
+    cursor.execute("DROP TABLE IF EXISTS cell_data;")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS cell_data (
             id SERIAL PRIMARY KEY,
-            cell_key VARCHAR(255) UNIQUE,  # Ключ в базе (например, data_bot1)
+            cell_key VARCHAR(255) UNIQUE,
             content BYTEA,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -63,7 +59,6 @@ finally:
 EOF
 }
 
-# Проверка состояния ячейки
 check_instance_state() {
     echo "Запуск check_instance_state"
     python - <<EOF
@@ -97,7 +92,6 @@ finally:
 EOF
 }
 
-# Восстановление данных из базы в /data
 restore_data_from_db() {
     echo "Запуск restore_data_from_db"
     python - <<EOF
@@ -125,7 +119,6 @@ try:
             for member in tar.getnames():
                 print(f" - {member}")
         print(f"Данные для ячейки с ключом {cell_key} восстановлены в {data_dir}!")
-        # Удаляем данные из базы после восстановления
         cursor.execute("DELETE FROM cell_data WHERE cell_key = %s;", (cell_key,))
         conn.commit()
         print(f"Данные для ячейки с ключом {cell_key} удалены из базы после восстановления.")
@@ -141,7 +134,6 @@ finally:
 EOF
 }
 
-# Сохранение данных из /data в базу с ключом data_$CELL_NAME
 save_data_to_db() {
     echo "Запуск save_data_to_db"
     python - <<EOF
@@ -157,9 +149,8 @@ cell_key = "$DB_CELL_KEY"
 try:
     conn = psycopg2.connect(db_url)
     cursor = conn.cursor()
-    # Удаляем старую запись для этого ключа
     cursor.execute("DELETE FROM cell_data WHERE cell_key = %s;", (cell_key,))
-    if os.path.exists(data_dir) and os.listdir(data_dir):  # Проверяем, есть ли файлы в /data
+    if os.path.exists(data_dir) and os.listdir(data_dir):
         tar_buffer = io.BytesIO()
         with tarfile.open(fileobj=tar_buffer, mode="w") as tar:
             tar.add(data_dir, arcname=os.path.basename(data_dir))
@@ -187,17 +178,15 @@ finally:
 EOF
 }
 
-# Периодическое автосохранение данных
 auto_save() {
     echo "Запуск auto_save в фоновом режиме"
     while true; do
         save_data_to_db
-        sleep 60  # Увеличили до 60 секунд, чтобы дать hikka время создать файлы
+        sleep 60
     done
 }
 auto_save &
 
-# Генерация внешнего трафика
 keep_alive() {
     echo "Запуск keep_alive"
     urls=(
@@ -214,7 +203,6 @@ keep_alive() {
 }
 keep_alive &
 
-# Мониторинг запрещённых утилит
 monitor_forbidden() {
     echo "Запуск monitor_forbidden"
     while true; do
@@ -228,16 +216,13 @@ monitor_forbidden() {
 }
 monitor_forbidden &
 
-# Инициализация, проверка состояния и восстановление данных
 echo "Инициализация скрипта"
 init_db
 check_instance_state
 restore_data_from_db
 
-# Перехват SIGTERM от Render для сохранения данных перед "засыпанием"
 echo "Установка trap для SIGTERM"
 trap 'echo "Получен SIGTERM, сохраняем данные..."; save_data_to_db; echo "Данные сохранены, завершаем работу."; exit 0' SIGTERM SIGINT
 
-# Запуск приложения
-echo "Запуск hikka"
-exec python3 -m hikka
+echo "Запуск python -m hikka"
+exec python3 -m hikka --port 10000

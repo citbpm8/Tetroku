@@ -187,21 +187,21 @@ auto_save() {
 }
 auto_save &
 
-keep_alive() {
-    echo "Запуск keep_alive"
-    urls=(
-        "https://api.github.com/repos/hikariatama/Hikka/commits?per_page=10"
-        "https://httpbin.org/stream/20"
-        "https://httpbin.org/get"
-    )
+keep_alive_local() {
+    echo "Запуск keep_alive_local в фоновом режиме"
+    sleep 30
+    if [ -z "$RENDER_EXTERNAL_HOSTNAME" ]; then
+        echo "Ошибка: Переменная RENDER_EXTERNAL_HOSTNAME не задана. Активность не будет генерироваться."
+        exit 1
+    fi
+    echo "Обнаружен домен сервиса: $RENDER_EXTERNAL_HOSTNAME"
     while true; do
-        for url in "${urls[@]}"; do
-            curl -s "$url" -o /dev/null &
-        done
-        sleep 5
+        curl -s "https://$RENDER_EXTERNAL_HOSTNAME" -o /dev/null &
+        echo "Отправлен запрос на https://$RENDER_EXTERNAL_HOSTNAME для поддержания активности"
+        sleep 30
     done
 }
-keep_alive &
+keep_alive_local &
 
 monitor_forbidden() {
     echo "Запуск monitor_forbidden"
@@ -225,4 +225,4 @@ echo "Установка trap для SIGTERM"
 trap 'echo "Получен SIGTERM, сохраняем данные..."; save_data_to_db; echo "Данные сохранены, завершаем работу."; exit 0' SIGTERM SIGINT
 
 echo "Запуск python -m hikka"
-exec python3 -m hikka --port 10000
+exec python -m hikka --port 8080

@@ -6,6 +6,9 @@ FORBIDDEN_UTILS="socat nc netcat php lua telnet ncat cryptcat rlwrap msfconsole 
 PORT=${PORT:-8080}
 HIKKA_RESTART_TIMEOUT=60
 
+# Устанавливаем зависимости
+apt-get update
+apt-get install -y net-tools  # Устанавливаем netstat
 pip install flask requests
 
 if [ -z "$RENDER_EXTERNAL_HOSTNAME" ]; then
@@ -42,7 +45,6 @@ hikka_last_seen = time.time()
 def free_port(port):
     """Освобождаем порт, если он занят"""
     try:
-        # Проверяем через netstat
         output = subprocess.check_output(f"netstat -tulnp | grep :{port}", shell=True).decode()
         pid = output.split()[-1].split('/')[0]
         if pid:
@@ -50,7 +52,7 @@ def free_port(port):
             logger.info(f"Убит процесс (PID: {pid}), занимавший порт {port}")
             time.sleep(1)  # Даём время на освобождение
     except subprocess.CalledProcessError:
-        logger.info(f"Порт {port} уже свободен или netstat не нашёл процесс")
+        logger.info(f"Порт {port} уже свободен или процесс не найден")
     except Exception as e:
         logger.error(f"Ошибка при освобождении порта: {e}")
 
@@ -69,7 +71,6 @@ def start_hikka():
         hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
         logger.info(f"Хикка запущена с PID: {hikka_process.pid}")
         current_mode = "hikka"
-        # Запускаем таймер для автоубийства
         threading.Thread(target=kill_hikka_after_30s, daemon=True).start()
     except Exception as e:
         logger.error(f"Ошибка при запуске Хикки: {e}")
@@ -95,7 +96,7 @@ def monitor_hikka():
                 start_hikka()
                 if current_mode == "flask" and hikka_process and hikka_process.poll() is None:
                     logger.info("Хикка вернулась, завершаем Flask")
-                    os._exit(0)  # Жёстко завершаем Flask
+                    os._exit(0)
 
 def keep_alive_local():
     while True:

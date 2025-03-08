@@ -3,11 +3,12 @@ set -e
 
 FORBIDDEN_UTILS="socat nc netcat php lua telnet ncat cryptcat rlwrap msfconsole hydra medusa john hashcat sqlmap metasploit empire cobaltstrike ettercap bettercap responder mitmproxy evil-winrm chisel ligolo revshells powershell certutil bitsadmin smbclient impacket-scripts smbmap crackmapexec enum4linux ldapsearch onesixtyone snmpwalk zphisher socialfish blackeye weeman aircrack-ng reaver pixiewps wifite kismet horst wash bully wpscan commix xerosploit slowloris hping iodine iodine-client iodine-server"
 
-PORT=${PORT:-8080}  
+PORT=8080  
 HEALTH_PORT=8081  
 
 start_health_stub() {
-    python3 - <<EOF &
+    echo "Starting health check server on port $HEALTH_PORT..."
+    python - <<EOF &
 import http.server
 import socketserver
 
@@ -27,20 +28,14 @@ class HealthHandler(http.server.BaseHTTPRequestHandler):
         return
 
 with socketserver.TCPServer(("0.0.0.0", PORT), HealthHandler) as httpd:
-    print(f"Health check running on http://0.0.0.0:{PORT}/health")
     httpd.serve_forever()
 EOF
 }
 
 keep_alive_local() {
     sleep 30
-    if [ -z "$RENDER_EXTERNAL_HOSTNAME" ]; then
-        echo "Error: RENDER_EXTERNAL_HOSTNAME is not set!"
-        exit 1
-    fi
     while true; do
-        echo "Checking health at: http://$RENDER_EXTERNAL_HOSTNAME:$HEALTH_PORT/health"
-        curl -s "http://$RENDER_EXTERNAL_HOSTNAME:$HEALTH_PORT/health" -o /dev/null
+        curl -s "http://127.0.0.1:$HEALTH_PORT/health" -o /dev/null || echo "Health check failed!"
         sleep 30
     done
 }
@@ -56,8 +51,13 @@ monitor_forbidden() {
     done
 }
 
-start_health_stub &  
-keep_alive_local &  
-monitor_forbidden &  
+echo "Starting processes..."
+start_health_stub &
+keep_alive_local &
+monitor_forbidden &
 
+echo "Checking health stub on port $HEALTH_PORT..."
+curl -v http://127.0.0.1:$HEALTH_PORT/health || echo "Health check failed!"
+
+echo "Starting Hikka on port $PORT..."
 exec python -m hikka --port "$PORT"

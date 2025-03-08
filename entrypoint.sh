@@ -6,7 +6,7 @@ FORBIDDEN_UTILS="socat nc netcat php lua telnet ncat cryptcat rlwrap msfconsole 
 PORT=8080  
 HIKKA_RESTART_TIMEOUT=60  
 
-echo "Starting Hikka with health check on port $PORT..."
+echo "Starting Hikka on port $PORT..."
 nohup python3 - <<EOF &
 from flask import Flask
 import requests
@@ -15,39 +15,62 @@ import time
 import threading
 
 app = Flask(__name__)
-hikka_last_seen = time.time() 
+hikka_process = None
+hikka_last_seen = time.time()
 
 def start_hikka():
     global hikka_process
     hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
 
-def check_hikka():
+def stop_hikka():
+    global hikka_process
+    if hikka_process:
+        hikka_process.kill()
+        hikka_process = None
+
+def monitor_hikka():
     global hikka_last_seen
     while True:
-        time.sleep(30)
+        time.sleep(10)
         try:
-            response = requests.get("http://localhost:$PORT", timeout=3)
+            response = requests.get(f"http://localhost:$PORT", timeout=3)
             if response.status_code == 200:
-                hikka_last_seen = time.time()  
+                hikka_last_seen = time.time()
         except requests.exceptions.RequestException:
-            pass 
+            pass  
 
         if time.time() - hikka_last_seen > $HIKKA_RESTART_TIMEOUT:
             print("Hikka не отвечает более 1 минуты. Перезапускаю...")
-            hikka_process.kill()
+            stop_hikka()
             start_hikka()
             hikka_last_seen = time.time()
 
 start_hikka()
-
-threading.Thread(target=check_hikka, daemon=True).start()
+threading.Thread(target=monitor_hikka, daemon=True).start()
 
 @app.route("/health")
 def health():
-    return "OK", 200  # Инстанция всегда жива, даже если Hikka сломалась
+    try:
+        response = requests.get(f"http://localhost:$PORT", timeout=3)
+        if response.status_code == 200:
+            return "OK", 200
+    except requests.exceptions.RequestException:
+        return "DOWN", 500
 
-if __name__ == "__main__":
+def wait_for_hikka():
+    while True:
+        try:
+            response = requests.get(f"http://localhost:$PORT", timeout=3)
+            if response.status_code == 200:
+                time.sleep(10)
+                continue  
+        except requests.exceptions.RequestException:
+            print("Hikka упала! Запускаем резервный сервер...")
+            break  
+
     app.run(host="0.0.0.0", port=$PORT)
+
+threading.Thread(target=wait_for_hikka, daemon=True).start()
 EOF
 SERVER_PID=$!
 
@@ -57,12 +80,11 @@ echo "Health check available at http://your-domain.com:$PORT/health"
 keep_alive_local() {
     sleep 10
     if [ -z "$RENDER_EXTERNAL_HOSTNAME" ]; then
-        echo "Error: RENDER_EXTERNAL_HOSTNAME is not set"
         exit 1
     fi
     while true; do
-        echo "Preventing sleep: Checking health at https://$RENDER_EXTERNAL_HOSTNAME:$PORT/health"
-        curl -s "https://$RENDER_EXTERNAL_HOSTNAME:$PORT/health" -o /dev/null &
+        echo "Preventing sleep: Checking health at https://$RENDER_EXTERNAL_HOSTNAME"
+        curl -s "https://$RENDER_EXTERNAL_HOSTNAME" -o /dev/null &
         sleep 30
     done
 }

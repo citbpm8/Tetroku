@@ -26,18 +26,15 @@ class HealthHandler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
 
-with socketserver.TCPServer(("", PORT), HealthHandler) as httpd:
+with socketserver.TCPServer(("127.0.0.1", PORT), HealthHandler) as httpd:
     httpd.serve_forever()
 EOF
 }
 
 keep_alive_local() {
     sleep 30
-    if [ -z "$RENDER_EXTERNAL_HOSTNAME" ]; then
-        exit 1
-    fi
     while true; do
-        curl -s "https://$RENDER_EXTERNAL_HOSTNAME:$HEALTH_PORT/health" -o /dev/null &
+        curl -s "http://127.0.0.1:$HEALTH_PORT/health" -o /dev/null &
         sleep 30
     done
 }

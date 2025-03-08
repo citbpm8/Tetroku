@@ -4,7 +4,7 @@ set -e
 FORBIDDEN_UTILS="socat nc netcat php lua telnet ncat cryptcat rlwrap msfconsole hydra medusa john hashcat sqlmap metasploit empire cobaltstrike ettercap bettercap responder mitmproxy evil-winrm chisel ligolo revshells powershell certutil bitsadmin smbclient impacket-scripts smbmap crackmapexec enum4linux ldapsearch onesixtyone snmpwalk zphisher socialfish blackeye weeman aircrack-ng reaver pixiewps wifite kismet horst wash bully wpscan commix xerosploit slowloris hping iodine iodine-client iodine-server"
 
 PORT=${PORT:-8080}  
-HEALTH_PORT=9090  
+HEALTH_PORT=8081  
 
 start_health_stub() {
     python - <<EOF &
@@ -26,7 +26,7 @@ class HealthHandler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
 
-with socketserver.TCPServer(("127.0.0.1", PORT), HealthHandler) as httpd:
+with socketserver.TCPServer(("0.0.0.0", PORT), HealthHandler) as httpd:
     httpd.serve_forever()
 EOF
 }

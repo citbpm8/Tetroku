@@ -7,28 +7,8 @@ PORT=${PORT:-8080}
 HEALTH_PORT=8081  
 
 start_health_stub() {
-    python - <<EOF &
-import http.server
-import socketserver
-
-PORT = $HEALTH_PORT
-
-class HealthHandler(http.server.BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == "/health":
-            self.send_response(200)
-            self.send_header("Content-type", "text/plain")
-            self.end_headers()
-            self.wfile.write(b"OK")
-        else:
-            self.send_error(404, "Not Found")
-
-    def log_message(self, format, *args):
-        return
-
-with socketserver.TCPServer(("0.0.0.0", PORT), HealthHandler) as httpd:
-    httpd.serve_forever()
-EOF
+    python3 -m http.server "$HEALTH_PORT" --bind 0.0.0.0 --directory /tmp &>/dev/null &
+    echo "OK" > /tmp/health
 }
 
 keep_alive_local() {
@@ -54,4 +34,4 @@ start_health_stub &
 keep_alive_local &
 monitor_forbidden &
 
-exec python -m hikka --port "$PORT"
+exec python3 -m hikka --port "$PORT"

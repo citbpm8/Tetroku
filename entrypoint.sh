@@ -30,12 +30,14 @@ hikka_last_seen = time.time()
 def start_hikka():
     global hikka_process
     hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
+    print(f"Hikka started with PID: {hikka_process.pid}")
 
 def stop_hikka():
     global hikka_process
     if hikka_process:
         hikka_process.kill()
         hikka_process = None
+        print("Hikka stopped")
 
 def monitor_hikka():
     global hikka_last_seen
@@ -74,8 +76,8 @@ def wait_for_hikka():
                 continue
         except requests.exceptions.RequestException:
             break
-
-app.run(host="0.0.0.0", port=$PORT)
+    # Когда Hikka падает, Flask занимает порт 8080
+    app.run(host="0.0.0.0", port=$PORT)
 
 threading.Thread(target=wait_for_hikka, daemon=True).start()
 EOF

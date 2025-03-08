@@ -30,30 +30,24 @@ hikka_last_seen = time.time()
 def start_hikka():
     global hikka_process
     hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
-    print(f"Hikka started with PID: {hikka_process.pid}")
 
 def stop_hikka():
     global hikka_process
     if hikka_process:
         hikka_process.kill()
         hikka_process = None
-        print("Hikka stopped")
 
 def monitor_hikka():
     global hikka_last_seen
     while True:
         time.sleep(10)
-        try:
-            response = requests.get(f"https://$RENDER_EXTERNAL_HOSTNAME", timeout=3)
-            if response.status_code == 200:
-                hikka_last_seen = time.time()
-        except requests.exceptions.RequestException:
-            pass
-
-        if time.time() - hikka_last_seen > $HIKKA_RESTART_TIMEOUT:
-            stop_hikka()
-            start_hikka()
+        if hikka_process and hikka_process.poll() is None:  # Замена URL на PID
             hikka_last_seen = time.time()
+        else:
+            if time.time() - hikka_last_seen > $HIKKA_RESTART_TIMEOUT:
+                stop_hikka()
+                start_hikka()
+                hikka_last_seen = time.time()
 
 start_hikka()
 threading.Thread(target=monitor_hikka, daemon=True).start()
@@ -61,7 +55,7 @@ threading.Thread(target=monitor_hikka, daemon=True).start()
 @app.route("/healthz")
 def healthz():
     try:
-        response = requests.get(f"https://$RENDER_EXTERNAL_HOSTNAME", timeout=3)
+        response = requests.get(f"http://localhost:$PORT", timeout=3)
         if response.status_code == 200:
             return "OK", 200
     except requests.exceptions.RequestException:
@@ -69,15 +63,13 @@ def healthz():
 
 def wait_for_hikka():
     while True:
-        try:
-            response = requests.get(f"https://$RENDER_EXTERNAL_HOSTNAME", timeout=3)
-            if response.status_code == 200:
-                time.sleep(10)
-                continue
-        except requests.exceptions.RequestException:
+        if hikka_process and hikka_process.poll() is None:  # Замена URL на PID
+            time.sleep(10)
+            continue
+        else:
             break
-    # Когда Hikka падает, Flask занимает порт 8080
-    app.run(host="0.0.0.0", port=$PORT)
+
+app.run(host="0.0.0.0", port=$PORT)
 
 threading.Thread(target=wait_for_hikka, daemon=True).start()
 EOF

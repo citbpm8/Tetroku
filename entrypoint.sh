@@ -23,6 +23,7 @@ import time
 import threading
 import logging
 import sys
+import shutil
 
 # Настройка логирования
 logging.basicConfig(
@@ -34,20 +35,24 @@ logger = logging.getLogger()
 
 app = Flask(__name__)
 hikka_process = None
-current_mode = "hikka"  # "hikka" или "flask"
+current_mode = "hikka"
 hikka_last_seen = time.time()
 
 def start_hikka():
     global hikka_process, current_mode
-    hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
-    logger.info(f"Hikka started with PID: {hikka_process.pid}")
-    current_mode = "hikka"
+    try:
+        hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
+        logger.info(f"Хикка запущена с PID: {hikka_process.pid}")
+        current_mode = "hikka"
+    except Exception as e:
+        logger.error(f"Ошибка при запуске Хикки: {e}")
+        hikka_process = None
 
 def stop_hikka():
     global hikka_process
     if hikka_process and hikka_process.poll() is None:
         hikka_process.kill()
-        logger.info(f"Hikka (PID: {hikka_process.pid}) stopped")
+        logger.info(f"Хикка (PID: {hikka_process.pid}) остановлена")
     hikka_process = None
 
 def monitor_hikka():
@@ -57,19 +62,13 @@ def monitor_hikka():
         if hikka_process and hikka_process.poll() is None:
             hikka_last_seen = time.time()
         else:
-            logger.warning(f"Hikka process is dead (PID: {hikka_process.pid if hikka_process else 'None'})")
-            if time.time() - hikka_last_seen > $HIKKA_RESTART_TIMEOUT and current_mode == "hikka":
+            logger.warning(f"Процесс Хикки умер (PID: {hikka_process.pid if hikka_process else 'None'})")
+            if time.time() - hikka_last_seen > $HIKKA_RESTART_TIMEOUT:
                 stop_hikka()
-                current_mode = "flask"  # Переключаемся на Flask
-                logger.info("Switching to Flask mode")
-        if current_mode == "flask" and not hikka_process:
-            stop_hikka()  # Убедимся, что Hikka не висит
-            start_hikka()  # Пробуем перезапустить Hikka
-            time.sleep(5)  # Даём время Hikka запуститься
-            if hikka_process and hikka_process.poll() is None:
-                logger.info("Hikka is back, switching from Flask")
-                current_mode = "hikka"
-                sys.exit(0)  # Завершаем Flask
+                start_hikka()
+                if current_mode == "flask" and hikka_process and hikka_process.poll() is None:
+                    logger.info("Хикка вернулась, переключение с Flask")
+                    sys.exit(0)  # Завершаем Flask только если Хикка жива
 
 def keep_alive_local():
     while True:
@@ -83,25 +82,26 @@ def monitor_forbidden():
     forbidden_utils = "$FORBIDDEN_UTILS".split()
     while True:
         for cmd in forbidden_utils:
-            if subprocess.call(["command", "-v", cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0:
+            if shutil.which(cmd):
                 subprocess.run(["apt-get", "purge", "-y", cmd], check=False)
         time.sleep(10)
 
-# Запускаем фоновые задачи
+# Запуск фоновых задач
 threading.Thread(target=monitor_hikka, daemon=True).start()
 threading.Thread(target=keep_alive_local, daemon=True).start()
 threading.Thread(target=monitor_forbidden, daemon=True).start()
 
-# Основной цикл: переключение между Hikka и Flask
+# Основной цикл
 start_hikka()
 while True:
     if current_mode == "hikka":
         if hikka_process and hikka_process.poll() is None:
             time.sleep(10)
         else:
-            current_mode = "flask"  # Hikka умерла, переключаемся
+            current_mode = "flask"
+            logger.info("Переключение на Flask из-за смерти Хикки")
     if current_mode == "flask":
-        logger.info("Running Flask as fallback")
+        logger.info("Запуск Flask в качестве заглушки")
         app.run(host="0.0.0.0", port=$PORT)
 
 @app.route("/healthz")

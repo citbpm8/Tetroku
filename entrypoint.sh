@@ -7,7 +7,7 @@ PORT=${PORT:-8080}
 HEALTH_PORT=8081  
 
 start_health_stub() {
-    python - <<EOF &
+    python3 - <<EOF &
 import http.server
 import socketserver
 
@@ -56,8 +56,8 @@ monitor_forbidden() {
     done
 }
 
-start_health_stub &
-keep_alive_local &
-monitor_forbidden &
+start_health_stub &  
+keep_alive_local &  
+monitor_forbidden &  
 
 exec python -m hikka --port "$PORT"

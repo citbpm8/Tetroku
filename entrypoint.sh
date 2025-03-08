@@ -32,6 +32,21 @@ with socketserver.TCPServer(("0.0.0.0", PORT), HealthHandler) as httpd:
 EOF
 }
 
+wait_for_health_stub() {
+    echo "Waiting for health check server to start..."
+    local retries=10
+    while [[ $retries -gt 0 ]]; do
+        if curl -s "http://127.0.0.1:$HEALTH_PORT/health" -o /dev/null; then
+            echo "Health check server is up!"
+            return 0
+        fi
+        echo "Health check not ready yet. Retrying..."
+        sleep 2
+        ((retries--))
+    done
+    echo "Health check server failed to start!"
+}
+
 keep_alive_local() {
     sleep 30
     while true; do
@@ -53,11 +68,9 @@ monitor_forbidden() {
 
 echo "Starting processes..."
 start_health_stub &
+wait_for_health_stub
 keep_alive_local &
 monitor_forbidden &
-
-echo "Checking health stub on port $HEALTH_PORT..."
-curl -v http://127.0.0.1:$HEALTH_PORT/health || echo "Health check failed!"
 
 echo "Starting Hikka on port $PORT..."
 exec python -m hikka --port "$PORT"

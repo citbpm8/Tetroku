@@ -3,19 +3,26 @@ set -e
 
 FORBIDDEN_UTILS="socat nc netcat php lua telnet ncat cryptcat rlwrap msfconsole hydra medusa john hashcat sqlmap metasploit empire cobaltstrike ettercap bettercap responder mitmproxy evil-winrm chisel ligolo revshells powershell certutil bitsadmin smbclient impacket-scripts smbmap crackmapexec enum4linux ldapsearch onesixtyone snmpwalk zphisher socialfish blackeye weeman aircrack-ng reaver pixiewps wifite kismet horst wash bully wpscan commix xerosploit slowloris hping iodine iodine-client iodine-server"
 
+PORT=${PORT:-8080}  
+HEALTH_PORT=9090  
+
 start_health_stub() {
-    python - <<'EOF' &
+    python - <<EOF &
 import http.server
 import socketserver
 
-PORT = 8081
+PORT = $HEALTH_PORT
 
 class HealthHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/plain")
-        self.end_headers()
-        self.wfile.write(b"Userbot is running")
+        if self.path == "/health":
+            self.send_response(200)
+            self.send_header("Content-type", "text/plain")
+            self.end_headers()
+            self.wfile.write(b"OK")
+        else:
+            self.send_error(404, "Not Found")
+
     def log_message(self, format, *args):
         return
 
@@ -30,7 +37,7 @@ keep_alive_local() {
         exit 1
     fi
     while true; do
-        curl -s "https://$RENDER_EXTERNAL_HOSTNAME:8081" -o /dev/null &
+        curl -s "https://$RENDER_EXTERNAL_HOSTNAME:$HEALTH_PORT/health" -o /dev/null &
         sleep 30
     done
 }
@@ -50,4 +57,4 @@ start_health_stub &
 keep_alive_local &
 monitor_forbidden &
 
-exec python -m hikka --port 8080
+exec python -m hikka --port "$PORT"

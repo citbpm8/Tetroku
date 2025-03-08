@@ -34,6 +34,6 @@ RUN chmod +x /entrypoint.sh
 
 WORKDIR /Hikka
 
-EXPOSE 8080 8081
+EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]

@@ -23,7 +23,7 @@ import subprocess
 import time
 import threading
 
-app = Flask(__name__)  # Исправлено с "name" на "__name__"
+app = Flask(__name__)
 hikka_process = None
 hikka_last_seen = time.time()
 
@@ -41,7 +41,7 @@ def monitor_hikka():
     global hikka_last_seen
     while True:
         time.sleep(10)
-        if hikka_process and hikka_process.poll() is None:  # Замена URL на PID
+        if hikka_process and hikka_process.poll() is None:  # Проверка по PID
             hikka_last_seen = time.time()
         else:
             if time.time() - hikka_last_seen > $HIKKA_RESTART_TIMEOUT:
@@ -63,13 +63,13 @@ def healthz():
 
 def wait_for_hikka():
     while True:
-        if hikka_process and hikka_process.poll() is None:  # Замена URL на PID
+        if hikka_process and hikka_process.poll() is None:  # Проверка по PID
             time.sleep(10)
             continue
         else:
             break
-
-app.run(host="0.0.0.0", port=$PORT)
+    # Flask занимает порт только после падения Hikka
+    app.run(host="0.0.0.0", port=$PORT)
 
 threading.Thread(target=wait_for_hikka, daemon=True).start()
 EOF

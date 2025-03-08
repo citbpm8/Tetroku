@@ -5,7 +5,7 @@ FORBIDDEN_UTILS="socat nc netcat php lua telnet ncat cryptcat rlwrap msfconsole 
 
 PORT=8080
 
-HIKKA_RESTART_TIMEOUT=60
+HIKKA_RESTART_TIMEOUT=5
 
 pip install flask requests
 
@@ -30,20 +30,23 @@ hikka_last_seen = time.time()
 def start_hikka():
     global hikka_process
     hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
+    print(f"Hikka restarted with PID: {hikka_process.pid}")
 
 def stop_hikka():
     global hikka_process
     if hikka_process:
         hikka_process.kill()
+        print(f"Hikka (PID: {hikka_process.pid}) stopped")
         hikka_process = None
 
 def monitor_hikka():
     global hikka_last_seen
     while True:
         time.sleep(10)
-        if hikka_process and hikka_process.poll() is None:  # Проверка по PID
+        if hikka_process and hikka_process.poll() is None:
             hikka_last_seen = time.time()
         else:
+            print(f"Hikka process is dead (PID: {hikka_process.pid if hikka_process else 'None'})")
             if time.time() - hikka_last_seen > $HIKKA_RESTART_TIMEOUT:
                 stop_hikka()
                 start_hikka()
@@ -63,12 +66,12 @@ def healthz():
 
 def wait_for_hikka():
     while True:
-        if hikka_process and hikka_process.poll() is None:  # Проверка по PID
+        if hikka_process and hikka_process.poll() is None:
             time.sleep(10)
             continue
         else:
             break
-    # Flask занимает порт только после падения Hikka
+    print("Hikka is confirmed dead, starting Flask")
     app.run(host="0.0.0.0", port=$PORT)
 
 threading.Thread(target=wait_for_hikka, daemon=True).start()

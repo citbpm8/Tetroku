@@ -6,6 +6,18 @@ FORBIDDEN_UTILS="socat nc netcat php lua telnet ncat cryptcat rlwrap msfconsole 
 PORT=8080  
 HIKKA_RESTART_TIMEOUT=60  
 
+echo "Installing Flask..."
+pip install flask requests
+
+if [ -z "$RENDER_EXTERNAL_HOSTNAME" ]; then
+    echo "Detecting Render hostname..."
+    RENDER_EXTERNAL_HOSTNAME=$(curl -s "http://169.254.169.254/latest/meta-data/public-hostname" || echo "")
+    if [ -z "$RENDER_EXTERNAL_HOSTNAME" ]; then
+        echo "Error: Unable to detect external hostname."
+        exit 1
+    fi
+fi
+
 echo "Starting Hikka on port $PORT..."
 nohup python3 - <<EOF &
 from flask import Flask
@@ -74,17 +86,14 @@ threading.Thread(target=wait_for_hikka, daemon=True).start()
 EOF
 SERVER_PID=$!
 
-echo "Server running on http://your-domain.com:$PORT"
-echo "Health check available at http://your-domain.com:$PORT/health"
+echo "Server running on https://$RENDER_EXTERNAL_HOSTNAME:$PORT"
+echo "Health check available at https://$RENDER_EXTERNAL_HOSTNAME:$PORT/health"
 
 keep_alive_local() {
     sleep 10
-    if [ -z "$RENDER_EXTERNAL_HOSTNAME" ]; then
-        exit 1
-    fi
     while true; do
-        echo "Preventing sleep: Checking health at https://$RENDER_EXTERNAL_HOSTNAME"
-        curl -s "https://$RENDER_EXTERNAL_HOSTNAME" -o /dev/null &
+        echo "Preventing sleep: Checking health at https://$RENDER_EXTERNAL_HOSTNAME:$PORT/health"
+        curl -s "https://$RENDER_EXTERNAL_HOSTNAME:$PORT/health" -o /dev/null &
         sleep 30
     done
 }

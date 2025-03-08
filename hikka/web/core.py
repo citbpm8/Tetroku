@@ -88,7 +88,7 @@ class Web(root.Web):
 
         if not url:
             ip = (
-                "127.0.0.1"
+                "0.0.0.0"
                 if "DOCKER" not in os.environ
                 else subprocess.run(
                     ["hostname", "-i"],

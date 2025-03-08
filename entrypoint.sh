@@ -24,6 +24,7 @@ import threading
 import logging
 import sys
 import shutil
+import os
 
 # Настройка логирования
 logging.basicConfig(
@@ -38,8 +39,20 @@ hikka_process = None
 current_mode = "hikka"
 hikka_last_seen = time.time()
 
+def free_port(port):
+    """Освобождаем порт, если он занят"""
+    try:
+        pid = subprocess.check_output(f"lsof -t -i:{port}", shell=True).decode().strip()
+        if pid:
+            subprocess.run(f"kill -9 {pid}", shell=True)
+            logger.info(f"Убит процесс (PID: {pid}), занимавший порт {port}")
+            time.sleep(1)  # Даём время на освобождение
+    except subprocess.CalledProcessError:
+        pass  # Порт уже свободен
+
 def start_hikka():
     global hikka_process, current_mode
+    free_port($PORT)  # Освобождаем порт перед запуском
     try:
         hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
         logger.info(f"Хикка запущена с PID: {hikka_process.pid}")
@@ -67,8 +80,8 @@ def monitor_hikka():
                 stop_hikka()
                 start_hikka()
                 if current_mode == "flask" and hikka_process and hikka_process.poll() is None:
-                    logger.info("Хикка вернулась, переключение с Flask")
-                    sys.exit(0)  # Завершаем Flask только если Хикка жива
+                    logger.info("Хикка вернулась, завершаем Flask")
+                    os._exit(0)  # Жёстко завершаем Flask
 
 def keep_alive_local():
     while True:

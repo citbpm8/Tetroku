@@ -19,44 +19,38 @@ import requests
 import subprocess
 import time
 import threading
-import sys
 import logging
 
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout)]
+    handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger()
 
 app = Flask(__name__)
 hikka_process = None
 hikka_last_seen = time.time()
-flask_running = False
 
 def start_hikka():
     global hikka_process
     hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
-    logger.info(f"Hikka restarted with PID: {hikka_process.pid}")
+    logger.info(f"Hikka started with PID: {hikka_process.pid}")
 
 def stop_hikka():
     global hikka_process
-    if hikka_process:
+    if hikka_process and hikka_process.poll() is None:
         hikka_process.kill()
         logger.info(f"Hikka (PID: {hikka_process.pid}) stopped")
-        hikka_process = None
+    hikka_process = None
 
 def monitor_hikka():
-    global hikka_last_seen, flask_running
+    global hikka_last_seen
     while True:
         time.sleep(10)
         if hikka_process and hikka_process.poll() is None:
             hikka_last_seen = time.time()
-            if flask_running:
-                logger.info("Hikka is back, stopping Flask")
-                flask_running = False
-                sys.exit(0)  # Завершаем Flask
         else:
             logger.warning(f"Hikka process is dead (PID: {hikka_process.pid if hikka_process else 'None'})")
             if time.time() - hikka_last_seen > $HIKKA_RESTART_TIMEOUT:
@@ -76,11 +70,6 @@ def healthz():
     except requests.exceptions.RequestException:
         return "DOWN", 500
 
-def run_flask():
-    global flask_running
-    flask_running = True
-    app.run(host="0.0.0.0", port=$PORT)
-
 def wait_for_hikka():
     while True:
         if hikka_process and hikka_process.poll() is None:
@@ -88,8 +77,7 @@ def wait_for_hikka():
             continue
         else:
             logger.info("Hikka is confirmed dead, starting Flask")
-            threading.Thread(target=run_flask).start()
-            break
+            app.run(host="0.0.0.0", port=$PORT)
 
 threading.Thread(target=wait_for_hikka, daemon=True).start()
 EOF
@@ -107,6 +95,10 @@ keep_alive_local() {
 }
 keep_alive_local &
 
-trap "kill $SERVER_PID; exit 0" SIGTERM SIGINT
+# Сохраняем PID фонового процесса keep_alive_local
+KEEP_ALIVE_PID=$!
 
-wait
+# Обработчик сигналов для корректного завершения
+trap 'kill $SERVER_PID $KEEP_ALIVE_PID 2>/dev/null; exit 0' SIGTERM SIGINT
+
+wait $SERVER_PID

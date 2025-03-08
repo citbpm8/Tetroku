@@ -39,8 +39,8 @@ keep_alive_local() {
         exit 1
     fi
     while true; do
-        echo "Checking health at: http://$RENDER_EXTERNAL_HOSTNAME/health"
-        curl -s "http://$RENDER_EXTERNAL_HOSTNAME/health" -o /dev/null
+        echo "Checking health at: http://$RENDER_EXTERNAL_HOSTNAME:$HEALTH_PORT/health"
+        curl -s "http://$RENDER_EXTERNAL_HOSTNAME:$HEALTH_PORT/health" -o /dev/null
         sleep 30
     done
 }

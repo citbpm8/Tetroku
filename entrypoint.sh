@@ -42,13 +42,25 @@ hikka_last_seen = time.time()
 def free_port(port):
     """Освобождаем порт, если он занят"""
     try:
-        pid = subprocess.check_output(f"lsof -t -i:{port}", shell=True).decode().strip()
+        # Проверяем через netstat
+        output = subprocess.check_output(f"netstat -tulnp | grep :{port}", shell=True).decode()
+        pid = output.split()[-1].split('/')[0]
         if pid:
             subprocess.run(f"kill -9 {pid}", shell=True)
             logger.info(f"Убит процесс (PID: {pid}), занимавший порт {port}")
             time.sleep(1)  # Даём время на освобождение
     except subprocess.CalledProcessError:
-        pass  # Порт уже свободен
+        logger.info(f"Порт {port} уже свободен или netstat не нашёл процесс")
+    except Exception as e:
+        logger.error(f"Ошибка при освобождении порта: {e}")
+
+def kill_hikka_after_30s():
+    """Убиваем Хикку через 30 секунд после запуска"""
+    global hikka_process
+    time.sleep(30)
+    if hikka_process and hikka_process.poll() is None:
+        hikka_process.kill()
+        logger.info(f"Хикка (PID: {hikka_process.pid}) автоматически убита через 30 секунд")
 
 def start_hikka():
     global hikka_process, current_mode
@@ -57,6 +69,8 @@ def start_hikka():
         hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
         logger.info(f"Хикка запущена с PID: {hikka_process.pid}")
         current_mode = "hikka"
+        # Запускаем таймер для автоубийства
+        threading.Thread(target=kill_hikka_after_30s, daemon=True).start()
     except Exception as e:
         logger.error(f"Ошибка при запуске Хикки: {e}")
         hikka_process = None

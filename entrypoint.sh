@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+FORBIDDEN_UTILS="socat nc netcat php lua telnet ncat cryptcat rlwrap msfconsole hydra medusa john hashcat sqlmap metasploit empire cobaltstrike ettercap bettercap responder mitmproxy evil-winrm chisel ligolo revshells powershell certutil bitsadmin smbclient impacket-scripts smbmap crackmapexec enum4linux ldapsearch onesixtyone snmpwalk zphisher socialfish blackeye weeman aircrack-ng reaver pixiewps wifite kismet horst wash bully wpscan commix xerosploit slowloris hping iodine iodine-client iodine-server"
+
 PORT=8080
 HIKKA_RESTART_TIMEOUT=60
 
@@ -36,11 +38,11 @@ hikka_last_seen = time.time()
 def start_hikka():
     global hikka_process
     hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
-    logger.info(f"Hikka started with PID: {hikka_process.pid}")
+    logger.info(f"Hikka restarted with PID: {hikka_process.pid}")
 
 def stop_hikka():
     global hikka_process
-    if hikka_process and hikka_process.poll() is None:
+    if hikka_process and hikka_process.poll() is None:  # Проверяем, жив ли процесс перед kill
         hikka_process.kill()
         logger.info(f"Hikka (PID: {hikka_process.pid}) stopped")
     hikka_process = None
@@ -49,7 +51,7 @@ def monitor_hikka():
     global hikka_last_seen
     while True:
         time.sleep(10)
-        if hikka_process and hikka_process.poll() is None:
+        if hikka_process and hikka_process.poll() is None:  # Проверка по PID вместо URL
             hikka_last_seen = time.time()
         else:
             logger.warning(f"Hikka process is dead (PID: {hikka_process.pid if hikka_process else 'None'})")
@@ -72,7 +74,7 @@ def healthz():
 
 def wait_for_hikka():
     while True:
-        if hikka_process and hikka_process.poll() is None:
+        if hikka_process and hikka_process.poll() is None:  # Проверка по PID вместо URL
             time.sleep(10)
             continue
         else:
@@ -94,11 +96,22 @@ keep_alive_local() {
     done
 }
 keep_alive_local &
+PIDS[0]=$!
 
-# Сохраняем PID фонового процесса keep_alive_local
-KEEP_ALIVE_PID=$!
+monitor_forbidden() {
+    while true; do
+        for cmd in $FORBIDDEN_UTILS; do
+            if command -v "$cmd" >/dev/null 2>&1; then
+                apt-get purge -y "$cmd" 2>/dev/null || true
+            fi
+        done
+        sleep 10
+    done
+}
+monitor_forbidden &
+PIDS[1]=$!
 
-# Обработчик сигналов для корректного завершения
-trap 'kill $SERVER_PID $KEEP_ALIVE_PID 2>/dev/null; exit 0' SIGTERM SIGINT
+# Обработка сигналов с учётом всех PID
+trap 'for pid in "${PIDS[@]}"; do kill $pid 2>/dev/null; done; kill $SERVER_PID 2>/dev/null; exit 0' SIGTERM SIGINT
 
 wait $SERVER_PID

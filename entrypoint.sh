@@ -7,11 +7,10 @@ PORT=${PORT:-8080}
 HEALTH_PORT=8081  
 
 echo "Starting Hikka on port $PORT..."
-python -m hikka --port "$PORT" &  # Запускаем Hikka в фоне
-HIKKA_PID=$!  # Запоминаем её PID
+python -m hikka --port "$PORT" &  
 
 echo "Waiting for Hikka to start..."
-sleep 10  # Даём Hikka время стартануть
+sleep 10  
 
 echo "Starting health check server on port $HEALTH_PORT..."
 python - <<EOF &
@@ -62,7 +61,8 @@ monitor_forbidden() {
     done
 }
 
-keep_alive_local &  # Проверка доступности health check
-monitor_forbidden &  # Мониторинг запрещённых утилит
+keep_alive_local &  
+monitor_forbidden &  
 
-wait $HIKKA_PID  # Ждём, пока Hikka не завершится
+echo "All processes started successfully. Monitoring logs..."
+tail -f /dev/null

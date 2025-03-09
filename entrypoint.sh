@@ -56,14 +56,6 @@ def free_port(port):
     except Exception as e:
         logger.error(f"Ошибка при освобождении порта: {e}")
 
-def kill_hikka_after_30s():
-    """Убиваем Хикку через 30 секунд после запуска"""
-    global hikka_process
-    time.sleep(30)
-    if hikka_process and hikka_process.poll() is None:
-        hikka_process.kill()
-        logger.info(f"Хикка (PID: {hikka_process.pid}) автоматически убита через 30 секунд")
-
 def start_hikka():
     global hikka_process, current_mode
     free_port($PORT)  # Освобождаем порт перед запуском
@@ -71,7 +63,6 @@ def start_hikka():
         hikka_process = subprocess.Popen(["python", "-m", "hikka", "--port", str($PORT)])
         logger.info(f"Хикка запущена с PID: {hikka_process.pid}")
         current_mode = "hikka"
-        threading.Thread(target=kill_hikka_after_30s, daemon=True).start()
     except Exception as e:
         logger.error(f"Ошибка при запуске Хикки: {e}")
         hikka_process = None

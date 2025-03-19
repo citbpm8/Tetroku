@@ -296,7 +296,7 @@ class TerminalMod(loader.Module):
         "blocked": "🚫 <b>Command blocked for security reasons</b>",
     }
 
-    blocked_commands = ["kill", "exit", "nc", "netcat", "ncat", "socat", "ruby", "php","msfvenom", "metasploit", "weevely", "empire", "sliver", "havoc","meterpreter", "evil-winrm", "ligolo", "chisel", "frp", "fast-reverse-proxy", "shell", "socket", "git", "reverse", "session"]
+    blocked_commands = ["kill", "exit", "nc", "netcat", "ncat", "socat", "msfvenom", "metasploit", "weevely", "empire", "sliver", "havoc","meterpreter", "evil-winrm", "ligolo", "chisel", "session"]
 
     def __init__(self):
         self.config = loader.ModuleConfig(

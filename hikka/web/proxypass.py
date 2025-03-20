@@ -64,22 +64,11 @@ class ProxyPasser:
                     return self._tunnel_url
                 else:
                     self.kill()
-
-            if "DOCKER" in os.environ:
-                # We're in a Docker container, so we can't use ssh
-                # Also, the concept of Docker is to keep
-                # everything isolated, so we can't proxy-pass to
-                # open web.
-                return None
-
+            # вырезана проверка на контейнер
             logger.debug("Starting proxy pass shell for port %d", int(port))
 
-self._sproc = await asyncio.create_subprocess_shell(
-    f"ssh -o StrictHostKeyChecking=no -R 80:0.0.0.0:{port} nokey@localhost.run",
-    stdin=asyncio.subprocess.PIPE,
-    stdout=asyncio.subprocess.PIPE,
-    stderr=asyncio.subprocess.PIPE,
-)
+            self._sproc = await asyncio.create_subprocess_shell(
+                f"ssh -o StrictHostKeyChecking=no -R 80:0.0.0.0:{port} nokey@localhost.run",
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,

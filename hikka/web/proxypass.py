@@ -96,6 +96,6 @@ class ProxyPasser:
 
                 return await self.get_url(port, no_retry=True)
 
-            logger.debug("Proxy pass tunnel url to port %d: %s", port, self._tunnel_url)
+            logger.debug("Proxy pass tunnel url to port %d: %s", int(port), self._tunnel_url)
 
             return self._tunnel_url

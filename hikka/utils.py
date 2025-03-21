@@ -939,7 +939,7 @@ def get_named_platform() -> str:
         return "🌼 HikkaHost"
 
     if main.IS_DOCKER:
-        return "👁️ Vamhost"
+        return "👁️ VamHost"
 
     if main.IS_TERMUX:
         return "🕶 Termux"
@@ -959,10 +959,10 @@ def get_platform_emoji() -> str:
 
     BASE = "".join(
         (
-            "<emoji document_id={}>👁️</emoji>",
-            "<emoji document_id=5352934134618549768>👁️</emoji>",
-            "<emoji document_id=5352663371290271790>👁️</emoji>",
-            "<emoji document_id=5350822883314655367>👁️</emoji>",
+            "<emoji document_id={}>🪐</emoji>",
+            "<emoji document_id=5352934134618549768>🪐</emoji>",
+            "<emoji document_id=5352663371290271790>🪐</emoji>",
+            "<emoji document_id=5350822883314655367>🪐</emoji>",
         )
     )
 
@@ -1330,7 +1330,7 @@ def get_commit_url() -> str:
     """
     try:
         hash_ = get_git_hash()
-        return f'<a href="https://github.com/i9opkas/Heroku_Vamhost/commit/{hash_}">#{hash_[:7]}</a>'
+        return f'<a href="https://raw.githubusercontent.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/commit/{hash_}">#{hash_[:7]}</a>'
     except Exception:
         return "Unknown"
 
@@ -1620,7 +1620,7 @@ def get_git_info() -> typing.Tuple[str, str]:
     hash_ = get_git_hash()
     return (
         hash_,
-        f"https://github.com/i9opkas/Heroku_Vamhost/commit/{hash_}" if hash_ else "",
+        f"https://raw.githubusercontent.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/commit/{hash_}" if hash_ else "",
     )
 
 

@@ -825,7 +825,7 @@ class Hikka:
                     else ""
                 )
                 logging.debug(
-                    "\n👁️ Heroku %s #%s (%s) started\n%s",
+                    "\n🪐 Heroku %s #%s (%s) started\n%s",
                     ".".join(list(map(str, list(__version__)))),
                     build[:7],
                     upd,
@@ -837,8 +837,8 @@ class Hikka:
                 logging.getLogger().handlers[0].get_logid_by_client(client.tg_id),
                 "https://imgur.com/a/uUF9zYL.png",
                 caption=(
-                    "👁️ <b>Heroku {} started!</b>\n\n⚙ <b>GitHub commit SHA: <a"
-                    ' href="https://github.com/i9opkas/Heroku_Vamhost/commit/{}">{}</a></b>\n🔎'
+                    "🪐 <b>Heroku {} started!</b>\n\n⚙ <b>GitHub commit SHA: <a"
+                    ' href="https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/commit/{}">{}</a></b>\n🔎'
                     " <b>Update status: {}</b>\n<b>{}</b>".format(
                         ".".join(list(map(str, list(__version__)))),
                         build,

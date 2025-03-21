@@ -42,7 +42,7 @@ class Help(loader.Module):
             ),
             loader.ConfigValue(
                 "desc_icon",
-                "<emoji document_id=5188377234380954537>👁️</emoji>",
+                "<emoji document_id=5188377234380954537>m🪐</emoji>",
                 lambda: "Desc emoji",
             ),
         )
@@ -137,7 +137,7 @@ class Help(loader.Module):
         )
 
         reply = "{} <b>{}</b>:".format(
-            "<blockquote><emoji document_id=5134452506935427991>👁️</emoji>",
+            "<blockquote><emoji document_id=5134452506935427991>🪐</emoji>",
             _name,
             "</blockquote>"
         )
@@ -343,7 +343,7 @@ class Help(loader.Module):
                 (
                     utils.get_platform_emoji()
                     if self._client.hikka_me.premium and CUSTOM_EMOJIS
-                    else "👁️"
+                    else "🪐"
                 )
             ),
         )

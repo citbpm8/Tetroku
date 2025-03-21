@@ -382,7 +382,7 @@ class TestMod(loader.Module):
             "🪐 Your Heroku logs will appear in this chat",
             silent=True,
             invite_bot=True,
-            avatar="https://raw.githubusercontent.com/coddrago/Heroku/refs/heads/v1.6.8/assets/heroku-logs.png",
+            avatar="https://raw.githubusercontent.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/master/assets/heroku-logs.png",
         )
 
         self.logchat = int(f"-100{chat.id}")

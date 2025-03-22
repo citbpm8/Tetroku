@@ -91,18 +91,22 @@ class UpdateNotifier(loader.Module):
             await asyncio.sleep(60)
             return
 
-        if self._pending not in {utils.get_git_hash(), self._notified}:
-            m = await self.inline.bot.send_animation(
-                self.tg_id,
-                "https://t.me/hikari_assets/71",
-                caption=self.strings("update_required").format(
-                    utils.get_git_hash()[:6],
-                    '<a href="https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/compare/{}...{}">{}</a>'.format(
-                        utils.get_git_hash()[:12],
-                        self.get_latest()[:12],
-                        self.get_latest()[:6],
-                    ),
-                    self.get_changelog(),
+        if self.inline and self.inline.bot:
+         m = await self.inline.bot.send_animation(
+             self.tg_id,
+             "https://t.me/hikari_assets/71",
+             caption=self.strings("update_required").format(
+                 utils.get_git_hash()[:6],
+                 '<a href="https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/compare/{}...{}">{}</a>'.format(
+                     utils.get_git_hash()[:12],
+                     self.get_latest()[:12],
+                     self.get_latest()[:6],
+                 ),
+             ),
+         )
+     else:
+         logger.error("Inline bot is not initialized!")
+         self.get_changelog(),
                 ),
                 reply_markup=self._markup(),
             )

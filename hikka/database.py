@@ -117,7 +117,7 @@ class Database(dict):
                 "heroku-assets",
                 "🌆 Your Heroku assets will be stored here",
                 archive=True,
-                avatar="https://raw.githubusercontent.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/refs/heads/master/assets/heroku-assets.png"
+                avatar="https://i.postimg.cc/tCDQQC1f/heroku-assets.jpg"
             )
         except ChannelsTooMuchError:
             self._assets = None

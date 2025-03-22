@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -e
 
 python3 -m hikka --port "$PORT" &
 

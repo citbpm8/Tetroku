@@ -239,7 +239,7 @@ class APIRatelimiterMod(loader.Module):
                     {"text": self.strings("proxied_url"), "url": self._debugger.url},
                     {
                         "text": self.strings("local_url"),
-                        "url": f"http://127.0.0.1:{self._debugger.port}",
+                        "url": f"http://0.0.0.0:{self._debugger.port}",
                     },
                 ],
             ],

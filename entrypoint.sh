@@ -1,134 +1,114 @@
 #!/bin/bash
-set -e
+set -eo pipefail
 
-FORBIDDEN_UTILS="socat nc netcat php lua telnet ncat cryptcat rlwrap msfconsole hydra medusa john hashcat sqlmap metasploit empire cobaltstrike ettercap bettercap responder mitmproxy evil-winrm chisel ligolo revshells powershell certutil bitsadmin smbclient impacket-scripts smbmap crackmapexec enum4linux ldapsearch onesixtyone snmpwalk zphisher socialfish blackeye weeman aircrack-ng reaver pixiewps wifite kismet horst wash bully wpscan commix xerosploit slowloris hping iodine iodine-client iodine-server"
-
+# Конфигурация
+TARGET_DIR="$HOME/Heroku"
 PORT=${PORT:-8080}
-HIKKA_RESTART_TIMEOUT=60
+CHECK_INTERVAL=1
+MAX_RESTARTS=60
+RESTART_TIMEOUT=2
+FORBIDDEN_UTILS=(...)
 
-apt-get update
-apt-get install -y net-tools
-pip install --no-cache-dir flask requests
+# Инициализация директории
+init_directory() {
+    if [ "$PWD" != "$TARGET_DIR" ]; then
+        echo "Перехожу в целевую директорию: $TARGET_DIR"
+        mkdir -p "$TARGET_DIR"
+        cd "$TARGET_DIR" || { echo "Ошибка перехода в директорию!"; exit 1; }
+    fi
+    
+    echo "Текущая рабочая директория: $PWD"
+}
 
+# Инициализация хоста
 if [ -z "$RENDER_EXTERNAL_HOSTNAME" ]; then
-    RENDER_EXTERNAL_HOSTNAME=$(curl -s "http://169.254.169.254/latest/meta-data/public-hostname" || echo "")
+    RENDER_EXTERNAL_HOSTNAME=$(curl -sf --retry 3 \
+        "http://169.254.169.254/latest/meta-data/public-hostname" || echo "")
     if [ -z "$RENDER_EXTERNAL_HOSTNAME" ]; then
+        echo "ERROR: Failed to determine external hostname"
         exit 1
     fi
 fi
 
-python3 - <<EOF
-from flask import Flask
-import requests
-import subprocess
-import time
-import threading
-import shutil
-import os
-import re
-import logging
+# Инициализация
+HIKKA_PID=""
+RESTART_COUNT=0
+LAST_RESTART=0
 
-# Настройка логирования в терминал
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler()]
-)
-logger = logging.getLogger()
+# Установка зависимостей
+apt-get update -q
+apt-get install -qy --no-install-recommends procps lsof curl python3-pip
 
-app = Flask(__name__)
-hikka_process = None
-current_mode = "hikka"
-hikka_last_seen = time.time()
+# Функции
+kill_port_processes() {
+    lsof -ti :"$PORT" | xargs -r kill -9
+}
 
-def free_port(port):
-    """Освобождаем порт, если он занят"""
-    try:
-        output = subprocess.check_output(f"netstat -tulnp | grep :{port}", shell=True).decode()
-        match = re.search(r"\d+/[^ ]+", output)
-        if match:
-            pid = match.group().split('/')[0]
-            if pid.isdigit():
-                subprocess.run(f"kill -9 {pid}", shell=True)
-                logger.info(f"Процесс (PID: {pid}), занимавший порт {port}, убит")
-                time.sleep(1)
-    except subprocess.CalledProcessError:
-        logger.info(f"Порт {port} свободен")
+start_hikka() {
+    kill_port_processes
+    init_directory  # Гарантируем правильную директорию
+    
+    # Запуск Hikka с логированием в терминал
+    python3 -m hikka --port "$PORT" 2>&1 | while IFS= read -r line; do
+        printf '[Hikka] %s\n' "$line"
+    done &
+    
+    HIKKA_PID=$!
+    echo "Hikka запущена в $PWD с PID $HIKKA_PID"
+}
 
-def start_hikka():
-    global hikka_process, current_mode
-    free_port($PORT)
-    try:
-        hikka_process = subprocess.Popen(["python3", "-m", "hikka", "--port", str($PORT)])
-        logger.info(f"Хикка запущена (PID: {hikka_process.pid})")
-        current_mode = "hikka"
-    except Exception as e:
-        logger.error(f"Ошибка при запуске Хикки: {e}")
-        hikka_process = None
+health_check() {
+    curl --output /dev/null --silent --fail --max-time 2 "http://localhost:$PORT" && 
+    ps -p "$HIKKA_PID" > /dev/null 2>&1
+}
 
-def stop_hikka():
-    global hikka_process
-    if hikka_process and hikka_process.poll() is None:
-        hikka_process.kill()
-        logger.info(f"Хикка (PID: {hikka_process.pid}) остановлена")
-    hikka_process = None
+restart_hikka() {
+    local now=$(date +%s)
+    if (( now - LAST_RESTART < RESTART_TIMEOUT )); then
+        sleep $(( RESTART_TIMEOUT - (now - LAST_RESTART) ))
+    fi
+    
+    (( RESTART_COUNT++ ))
+    if (( RESTART_COUNT > MAX_RESTARTS )); then
+        exit 1
+    fi
+    
+    start_hikka
+    LAST_RESTART=$(date +%s)
+}
 
-def monitor_hikka():
-    global hikka_last_seen, current_mode
-    while True:
-        time.sleep(10)
-        if hikka_process and hikka_process.poll() is None:
-            hikka_last_seen = time.time()
-        else:
-            logger.warning(f"Процесс Хикки умер (PID: {hikka_process.pid if hikka_process else 'None'})")
-            if time.time() - hikka_last_seen > $HIKKA_RESTART_TIMEOUT:
-                stop_hikka()
-                start_hikka()
-                if current_mode == "flask" and hikka_process and hikka_process.poll() is None:
-                    logger.info("Хикка восстановлена, завершение Flask")
-                    os._exit(0)
+monitor_forbidden() {
+    while true; do
+        for util in "${FORBIDDEN_UTILS[@]}"; do
+            pkill -9 -x "$util"
+            if pgrep -x "$util" >/dev/null; then
+                echo "Убит запрещенный процесс: $util"
+            fi
+        done
+        
+        # Проверка пакетов
+        dpkg -l | awk '/^ii/{print $2}' | while read -r pkg; do
+            for util in "${FORBIDDEN_UTILS[@]}"; do
+                if [[ "$pkg" == "$util" ]]; then
+                    apt-get purge -yq "$pkg"
+                    echo "Удален запрещенный пакет: $pkg"
+                fi
+            done
+        done
+        
+        sleep 5
+    done
+}
 
-def keep_alive_local():
-    while True:
-        time.sleep(30)
-        try:
-            requests.get(f"https://$RENDER_EXTERNAL_HOSTNAME", timeout=5)
-        except requests.exceptions.RequestException:
-            pass
+trap 'kill_port_processes; kill -- -$$' SIGINT SIGTERM
 
-def monitor_forbidden():
-    forbidden_utils = "$FORBIDDEN_UTILS".split()
-    while True:
-        for cmd in forbidden_utils:
-            if shutil.which(cmd):
-                subprocess.run(["apt-get", "purge", "-y", cmd], check=False)
-                logger.info(f"Удалена запрещенная утилита: {cmd}")
-        time.sleep(10)
+start_hikka
+monitor_forbidden &
 
-# Запуск фоновых задач
-threading.Thread(target=monitor_hikka, daemon=True).start()
-threading.Thread(target=keep_alive_local, daemon=True).start()
-threading.Thread(target=monitor_forbidden, daemon=True).start()
-
-# Основной цикл
-start_hikka()
-while True:
-    if current_mode == "hikka":
-        if hikka_process and hikka_process.poll() is None:
-            time.sleep(10)
-        else:
-            current_mode = "flask"
-            logger.info("Переключение на Flask из-за сбоя Хикки")
-    if current_mode == "flask":
-        logger.info("Запуск Flask как заглушки")
-        app.run(host="0.0.0.0", port=$PORT)
-
-@app.route("/healthz")
-def healthz():
-    try:
-        response = requests.get(f"http://localhost:$PORT", timeout=3)
-        if response.status_code == 200:
-            return "OK", 200
-    except requests.exceptions.RequestException:
-        return "DOWN", 500
-EOF
+while true; do
+    if ! health_check; then
+        echo "Hikka не отвечает! Перезапуск..."
+        restart_hikka
+    fi
+    sleep "$CHECK_INTERVAL"
+done

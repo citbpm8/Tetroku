@@ -79,7 +79,7 @@ class ProxyPasser:
             utils.atexit(self.kill)
 
             self._url_available = asyncio.Event()
-            logger.debug("Starting proxy pass reader for port %d", port)
+            logger.debug(f"Starting proxy pass reader for port {PORT}")
             asyncio.ensure_future(
                 self._read_stream(
                     self._process_stream,

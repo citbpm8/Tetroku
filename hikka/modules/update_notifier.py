@@ -1,6 +1,5 @@
-# пасхалка
 # ©️ Dan Gazizullin, 2021-2023
-# This file is a part of Hikka Userbot
+# This file is a part of Hikka Userbot t
 # 🌐 https://github.com/hikariatama/Hikka
 # You can redistribute it and/or modify it under the terms of the GNU AGPLv3
 # 🔑 https://www.gnu.org/licenses/agpl-3.0.html
@@ -97,7 +96,7 @@ class UpdateNotifier(loader.Module):
                 "https://t.me/hikari_assets/71",
                 caption=self.strings("update_required").format(
                     utils.get_git_hash()[:6],
-                    '<a href="https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/compare/{}...{}">{}</a>'.format(
+                    '<a href="https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6du4a4uaurdktsrusu5sitdgjfjbvkhfiy/compare/{}...{}">{}</a>'.format(
                         utils.get_git_hash()[:12],
                         self.get_latest()[:12],
                         self.get_latest()[:6],
@@ -146,6 +145,6 @@ class UpdateNotifier(loader.Module):
         with open('CHANGELOG.md', mode='r', encoding='utf-8') as f:
             changelog = f.read().split('##')[1].strip()
         if (await self._client.get_me()).premium:
-            changelog.replace('🌑 Heroku', '<emoji document_id=5192765204898783881>🌘</emoji><emoji document_id=5195311729663286630>🌘</emoji><emoji document_id=5195045669324201904>🌘</emoji>')
+            changelog.replace('⚙️ Heroku', '<emoji document_id=5192765204898783881>🌘</emoji><emoji document_id=5195311729663286630>🌘</emoji><emoji document_id=5195045669324201904>🌘</emoji>')
 
         await utils.answer(message, self.strings('changelog').format(changelog))

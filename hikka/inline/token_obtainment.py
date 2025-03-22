@@ -52,7 +52,7 @@ class TokenObtainment(InlineUnit):
                 username = f"@Vamhost_CEO_bot"
 
             for msg in [
-                f"🪐 Heroku userb bot (VamHost)"[:64],
+                f"🪐 Heroku userbot (VamHost)"[:64],
                 username,
                 "/setuserpic",
                 username,

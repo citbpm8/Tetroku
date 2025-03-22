@@ -46,10 +46,10 @@ class TokenObtainment(InlineUnit):
                     pass
                 else:
                     uid = utils.rand(6)
-                    username = f"@Vamhost_CEO_bot"
+                    username = f"@Vamhost_{uid}_bot"
             else:
                 uid = utils.rand(6)
-                username = f"@Vamhost_CEO_bot"
+                username = f"@Vamhost_{uid}_bot"
 
             for msg in [
                 f"🪐 Heroku userbot (VamHost)"[:64],
@@ -147,7 +147,7 @@ class TokenObtainment(InlineUnit):
                         "hikka.inline",
                         "custom_bot",
                         False,
-                    ) and not re.search(r"@Vamhost_CEO_bot", button.text):
+                    ) and not re.search(r"@Vamhost_[0-9a-zA-Z]{6}_bot", button.text):
                         continue
 
                     await fw_protect()

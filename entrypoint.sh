@@ -35,10 +35,6 @@ HIKKA_PID=""
 RESTART_COUNT=0
 LAST_RESTART=0
 
-# Установка зависимостей
-apt-get update -q
-apt-get install -qy --no-install-recommends procps lsof curl python3-pip
-
 # Функции
 kill_port_processes() {
     lsof -ti :"$PORT" | xargs -r kill -9

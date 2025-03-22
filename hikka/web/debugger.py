@@ -96,7 +96,7 @@ class WebDebugger:
 
     @property
     def url(self) -> str:
-        return self._url or f"http://127.0.0.1:{self.port}"
+        return self._url or f"http://0.0.0.0:{self.port}"
 
     def feed(self, exc_type, exc_value, exc_traceback) -> str:
         logger.debug("Feeding exception %s to werkzeug debugger", exc_type)

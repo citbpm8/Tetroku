@@ -88,7 +88,7 @@ class Web(root.Web):
 
         if not url:
             # вырезана проверка на докер
-            ip = "127.0.0.1"
+            ip = "0.0.0.0"
 
             url = f"http://{ip}:{self.port}"
 

@@ -78,7 +78,7 @@ else:
     web_available = True
 
 BASE_DIR = (
-    "/data"
+    "/Heroku"
     if "DOCKER" in os.environ
     else os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 )

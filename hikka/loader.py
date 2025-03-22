@@ -264,7 +264,7 @@ ru_keys = 'ёйцукенгшщзхъфывапролджэячсмитьбю.Ё
 en_keys = "`qwertyuiop[]asdfghjkl;'zxcvbnm,./~@#$%^&QWERTYUIOP{}ASDFGHJKL:\"|ZXCVBNM<>?"
 
 BASE_DIR = (
-    "/data"
+    "/Heroku"
     if "DOCKER" in os.environ
     else os.path.normpath(os.path.join(utils.get_base_dir(), ".."))
 )

@@ -40,7 +40,7 @@ from ..tl_cache import CustomTelegramClient
 from ..version import __version__
 
 DATA_DIR = (
-    "/data"
+    "/Heroku"
     if "DOCKER" in os.environ
     else os.path.normpath(os.path.join(utils.get_base_dir(), ".."))
 )

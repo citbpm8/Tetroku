@@ -18,7 +18,7 @@ FROM python:3.10-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl libcairo2 git ffmpeg libmagic1 libavcodec-dev libavutil-dev libavformat-dev \
-    libswscale-dev libavdevice-dev neofetch wkhtmltopdf gcc python3-dev && \
+    libswscale-dev libavdevice-dev neofetch wkhtmltopdf gcc python3-dev procps lsof && \
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* /tmp/* && apt-get clean
 

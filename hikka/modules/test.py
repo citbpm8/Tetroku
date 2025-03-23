@@ -321,7 +321,7 @@ class TestMod(loader.Module):
             *main.__version__,
             (
                 " <a"
-                f' href="https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6du4a4uaurdktsrusu5sitdgjfjbvkhfiy/commit/{ghash}">@{ghash[:8]}</a>'
+                f' href="https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/commit/{ghash}">@{ghash[:8]}</a>'
                 if ghash
                 else ""
             ),

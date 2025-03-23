@@ -839,7 +839,7 @@ class Hikka:
                 "https://imgur.com/a/uUF9zYL.png",
                 caption=(
                     "🪐 <b>Heroku {} started!</b>\n\n⚙ <b>GitHub commit SHA: <a"
-                    ' href="https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6du4a4uaurdktsrusu5sitdgjfjbvkhfiy/commit/{}">{}</a></b>\n🔎'
+                    ' href="https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/commit/{}">{}</a></b>\n🔎'
                     " <b>Update status: {}</b>\n<b>{}</b>".format(
                         ".".join(list(map(str, list(__version__)))),
                         build,

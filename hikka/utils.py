@@ -1639,7 +1639,7 @@ def get_git_info() -> typing.Tuple[str, str]:
     hash_ = get_git_hash()
     return (
         hash_,
-        f"https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6du4a4uaurdktsrusu5sitdgjfjbvkhfiy/commit/{hash_}" if hash_ else "",
+        f"https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d/commit/{hash_}" if hash_ else "",
     )
 
 

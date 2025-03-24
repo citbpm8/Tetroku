@@ -39,7 +39,7 @@ class UpdaterMod(loader.Module):
         self.config = loader.ModuleConfig(
             loader.ConfigValue(
                 "GIT_ORIGIN_URL",
-                "https://github.com/Roger-git-cmd/Djtjtdhrsutdjtvjbvkhgoufl7fi6du5d7464e47du5dy4dutdkyfkug.igitl7fi6d",
+                "https://github.com/i9opkas/Heroku_Vamhost",
                 lambda: self.strings("origin_cfg_doc"),
                 validator=loader.validators.Link(),
             )

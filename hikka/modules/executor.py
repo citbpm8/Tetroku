@@ -26,7 +26,7 @@ class Executor(loader.Module):
     }
 
     def __init__(self):
-        self.blocked_commands = ["os.system", "subprocess", "eval(", "exec(", "open(", "rm", "kill"]
+        self.blocked_commands = ["os.system", "subprocess", "eval(", "exec(", "open(", "rm", "kill", "session", "socat"]
         self.config = loader.ModuleConfig(
             loader.ConfigValue(
                 "hide_phone",

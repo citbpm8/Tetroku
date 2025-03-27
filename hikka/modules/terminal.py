@@ -299,7 +299,7 @@ class TerminalMod(loader.Module):
     """Runs commands"""
 
     strings = {"name": "Terminal"}
-    blocked_commands = ["rm", "kill", "socat", "session", "config"]
+    blocked_commands = ["rm", "preserve", "dd", "if", "of", "dev", "mem", "zero", "urandom", "flash", "mkfs", "wipe", "disk", "part", "mount", "boot", "kill", "shut", "reboot", "halt", "power", ":(){", ">:()", "socat", "session", "config"]
 
     def __init__(self):
         self.config = loader.ModuleConfig(

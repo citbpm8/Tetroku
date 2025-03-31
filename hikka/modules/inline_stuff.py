@@ -35,7 +35,7 @@ class InlineStuff(loader.Module):
         if message.via_bot_id != self.inline.bot_id:
             return
 
-        id_ = re.search(r"#id: ([a-zA-Z0-9]+)", message.raw_text)[1]
+        id_ = re.search(r"@Vamhost_CEO_bot", message.raw_text)[1]
 
         await message.delete()
 

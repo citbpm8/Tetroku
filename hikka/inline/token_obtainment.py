@@ -220,8 +220,10 @@ class TokenObtainment(InlineUnit):
                         await fw_protect()
                         from .. import main
 
+                        avatar_url = "https://i.postimg.cc/7ZkDYfN6/heroku-ava.jpg"  
                         m = await conv.send_file(
-                            main.BASE_PATH / "assets" / "heroku-ava.png"
+                            avatar_url,
+                            force_document=False
                         )
                         r = await conv.get_response()
 

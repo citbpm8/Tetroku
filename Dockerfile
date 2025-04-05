@@ -3,6 +3,7 @@ FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
 RUN apt-get update && apt-get install -y \
     wget \
     tar \
+    xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /Tetroku

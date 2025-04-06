@@ -1,18 +1,22 @@
-FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
+FROM ubuntu:22.04
 
 RUN apt-get update && apt-get install -y \
-    wget \
-    tar \
-    xz-utils \
-    nvidia-utils-535 \
+    git \
+    build-essential \
+    cmake \
+    libuv1-dev \
+    libssl-dev \
+    libhwloc-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /Tetroku
-RUN wget https://github.com/develsoftware/GMinerRelease/releases/download/3.43/gminer_3_43_linux64.tar.xz \
-    && tar -xvf gminer_3_43_linux64.tar.xz \
-    && rm gminer_3_43_linux64.tar.xz
+RUN git clone https://github.com/xmrig/xmrig.git \
+    && cd xmrig \
+    && mkdir build \
+    && cd build \
+    && cmake .. \
+    && make
 
-RUN nvidia-smi || echo "No GPU found, nvidia-smi failed"
-
-ENTRYPOINT ["./miner"]
-CMD ["--algo", "autolykos2", "--server", "pool.woolypooly.com:3100", "--user", "9fJjd9dMfmGkn4DFktRzbiGHa7BJbXSfB3nhnQQLqsMJ499aNxq", "--pass", "x", "--pl", "70"]
+WORKDIR /Tetroku/xmrig/build
+ENTRYPOINT ["./xmrig"]
+CMD ["--url", "pool.minexmr.com:4444", "--user", "4AsybUjHWc3LtcJj7h7yd9NJ3JXQynQUneMTpoTALYgmSFNW6XLmYGGLR5rHr3zcfjbPZ6dHp9MSdLiDBAXd4wKQ5ufR6vv.KoyebMiner", "--pass", "x", "--threads", "6", "--cpu-max-threads-hint", "86"]
